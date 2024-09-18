@@ -16,15 +16,12 @@ from z_experiencecollector import ZExperienceData
 class ZNet(nn.Module):
     def __init__(self,size):
         super().__init__()
-        self.size = 64*size*size#1024 #64*(size-4)*(size-4) #(size-2*2) #without padding #1024
-
+        self.size = 64*size*size
         self.conv1 = nn.Conv2d(2,64,3,padding='same')
         self.conv2 = nn.Conv2d(64,64,3,padding='same')
         self.conv3 = nn.Conv2d(64,64,3,padding='same')
-
         self.linear1 = nn.Linear(self.size,512)
-
-        
+  
         #value head
         self.value_linear = nn.Linear(512,512)
         self.value_output = nn.Linear(512,size*size)
@@ -37,31 +34,22 @@ class ZNet(nn.Module):
         
 
 
-    def forward(self,x):
-        
+    def forward(self,x):   
         x = self.conv1(x)
         x = torch.relu(x)
         x = self.conv2(x)
         x = torch.relu(x)
         x = self.conv3(x)
         x = torch.relu(x)
-
-
         x = x.view(-1,self.size)
-
-
         x = self.linear1(x)
         x = torch.relu(x)
-
-        
-
 
         #value output
         policy = self.value_linear(x)
         policy = torch.relu(policy)
         policy = self.value_output(policy)
         policy = self.soft_max(policy)
-
 
         #policy output
         value = self.policy_linear(x)

@@ -39,8 +39,8 @@ def play_training_games(N,agent1,agent2,size=9):
 
     datap1 = p1_collector.to_data()
     datap2 = p2_collector.to_data()
-    datap1.write('capturebot\\selfplaydata\\z_agentb')
-    datap2.write('capturebot\\selfplaydata\\z_agentw')
+    datap1.write('selfplaydata\\z_agentb')
+    datap2.write('selfplaydata\\z_agentw')
 
 
 
@@ -48,7 +48,7 @@ def play_training_games(N,agent1,agent2,size=9):
 
 def training(size=9):
     encoder = SimpleEncoder(size)
-    z_net = torch.jit.load('capturebot\\nets\\z_net.pt')
+    z_net = torch.jit.load('nets\\z_net.pt')
 
     z_agentb = ZAgent(z_net,size,encoder)
     z_agentw = ZAgent(z_net,size,encoder)
@@ -72,7 +72,7 @@ def play_games(N,agent1,agent2,size=9):
 
 def test(size=9):
     encoder = SimpleEncoder(size)
-    z_net = torch.jit.load('capturebot\\nets\\z_net.pt')
+    z_net = torch.jit.load('nets\\z_net.pt')
     z_agent = ZAgent(z_net,size,encoder,root_noise=True)
 
 
@@ -118,7 +118,7 @@ def train_loop(net,dataloader,value_loss_fn,policy_loss_fn,optimizer):
     print(f"The average policy loss was: {total_policy_loss/num_batches:.4f}")
 
 def fit_stuff(size=9):
-    z_net = torch.jit.load("capturebot\\nets\\z_net.pt")
+    z_net = torch.jit.load("nets\\z_net.pt")
 
     value_loss_fn = nn.MSELoss()
     policy_loss_fn = nn.CrossEntropyLoss()
@@ -128,10 +128,10 @@ def fit_stuff(size=9):
 
 
     datap1 = ZExperienceData()
-    datap1.load('capturebot\\selfplaydata\\z_agentb.npz')
+    datap1.load('selfplaydata\\z_agentb.npz')
 
     datap2 = ZExperienceData()
-    datap2.load('capturebot\\selfplaydata\\z_agentw.npz')
+    datap2.load('selfplaydata\\z_agentw.npz')
 
     game_data = np.append((datap1.gamestates).astype('float32'),(datap2.gamestates).astype('float32'),0) 
     game_counts = np.append(datap1.visit_counts,datap2.visit_counts,0).astype('float32')
@@ -155,5 +155,5 @@ def fit_stuff(size=9):
     train_loop(z_net,train_dataloader,value_loss_fn,policy_loss_fn,optimizer)
 
     model_scripted = torch.jit.script(z_net) # Export to TorchScript
-    model_scripted.save('capturebot\\nets\\z_net.pt')
+    model_scripted.save('nets\\z_net.pt')
 
