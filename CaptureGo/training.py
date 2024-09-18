@@ -46,13 +46,13 @@ def play_training_games(N,agent1,agent2,size=9):
 
 
 
-def training(size=9):
+def self_play(size=9):
     encoder = SimpleEncoder(size)
     z_net = torch.jit.load('nets\\z_net.pt')
 
     z_agentb = ZAgent(z_net,size,encoder)
     z_agentw = ZAgent(z_net,size,encoder)
-    play_training_games(50,z_agentb,z_agentw,size)
+    play_training_games(100,z_agentb,z_agentw,size)
 
 def play_games(N,agent1,agent2,size=9):
     agent1_wins = 0
@@ -157,3 +157,10 @@ def fit_stuff(size=9):
     model_scripted = torch.jit.script(z_net) # Export to TorchScript
     model_scripted.save('nets\\z_net.pt')
 
+'''
+encoder = SimpleEncoder(9)
+znet = torch.jit.load('nets\\z_net.pt')
+zagent = ZAgent(znet,9,encoder,root_noise=True)
+zagent.set_playouts(500)
+play_training_game(zagent,zagent)
+'''

@@ -8,7 +8,7 @@ import time
 
 def train():
     for i in range(1):
-        training.training()
+        training.self_play()
 
         training.fit_stuff()
         

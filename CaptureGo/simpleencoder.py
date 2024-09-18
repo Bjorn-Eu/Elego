@@ -17,7 +17,7 @@ class SimpleEncoder(Encoder):
         np_white = np.copy(np_inner_board)
         np_black[np_black==-1] = 0
         np_white[np_white==1] = 0
-        np_white = -1*np_white
+        np_white = -np_white
 
         board_array = None
         if gamestate.turn == 1:

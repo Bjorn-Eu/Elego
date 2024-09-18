@@ -119,7 +119,7 @@ class Board:
         else:
             return False
 
-    #returns deque of all coordinate of adjacent stone of that color
+    #returns list of all coordinate of adjacent stone of that color
     def adjacent_friends(self,color,index_x,index_y):
         friends = []
         if self.board[index_x+1][index_y] == color:
@@ -132,7 +132,7 @@ class Board:
             friends.append([index_x,index_y-1])
         return friends
 
-    #returns a deque of all legal moves for a given color
+    #returns a list of all legal moves for a given color
     def legal_moves(self,color):
         moves = []
         for i in range(1,self.size+1):

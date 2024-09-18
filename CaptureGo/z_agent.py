@@ -61,19 +61,22 @@ class ZNet(nn.Module):
 
 class ZAgent(Agent):
 
-    def __init__(self,net,size,encoder,root_noise=True):
+    def __init__(self,net,size,encoder,root_noise=True,playouts=20):
         self.net = net
         self.size = size
         self.encoder = encoder
         self.collector = None
         self.root_noise = root_noise
+        self.playouts = playouts
+
+    def set_playouts(self,playouts):
+        self.playout = playouts
         
     def set_collector(self,collector):
         self.collector = collector
     def select_move(self,gamestate):
         root = self.create_node(gamestate,noise=self.root_noise)
-        playouts = 20
-        for i in range(playouts):
+        for i in range(self.playouts):
             node = root
             #walk down to leaf node
             next_move = self.select_branch(node)
@@ -125,7 +128,7 @@ class ZAgent(Agent):
         priors.shape = (self.size*self.size,)
         if noise:
             rnd = np.random.default_rng()
-            ar = [0.03*7 for i in range(self.size*self.size)]
+            ar = [0.03*20 for i in range(self.size*self.size)]
             s = rnd.dirichlet(ar)
             priors = 0.75*priors + 0.25*s
             
