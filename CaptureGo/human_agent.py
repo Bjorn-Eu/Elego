@@ -7,9 +7,7 @@ class HumanAgent(Agent):
     def select_move(self,gamestate):
         while True:
             gamestate.print_state()
-
-            move_string = input("Enter move:").lower()
-        
+            move_string = input("Enter move:").lower() 
         
             if len(move_string) == 2:
                 move_xy = list(move_string)

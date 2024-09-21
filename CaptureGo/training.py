@@ -7,12 +7,13 @@ import numpy as np
 from board import Board
 from move import Move
 from gamestate import GameState
-from z_agent import ZNet
-from z_agent import ZAgent
+from zagent import ZNet
+from zagent import ZAgent
 from random_agent import RandomAgent
 from simpleencoder import SimpleEncoder
-from z_experiencecollector import ZExperienceCollector
-from z_experiencecollector import ZExperienceData
+from zexperiencecollector import ZExperienceCollector
+from zexperiencecollector import ZExperienceData
+import time
 
 def play_training_games(N,agent1,agent2,size=9):
     p1_collector = ZExperienceCollector()
@@ -44,15 +45,13 @@ def play_training_games(N,agent1,agent2,size=9):
 
 
 
-
-
-def self_play(size=9):
+def self_play(size=9,device='cpu'):
     encoder = SimpleEncoder(size)
     z_net = torch.jit.load('nets\\z_net.pt')
 
     z_agentb = ZAgent(z_net,size,encoder)
     z_agentw = ZAgent(z_net,size,encoder)
-    play_training_games(100,z_agentb,z_agentw,size)
+    play_training_games(300,z_agentb,z_agentw,size)
 
 def play_games(N,agent1,agent2,size=9):
     agent1_wins = 0
@@ -65,7 +64,6 @@ def play_games(N,agent1,agent2,size=9):
             agent2_wins += 1
         elif gamestate.turn == -1:
             agent1_wins += 1
-
     print("The winrate was",agent1_wins/N)
 
 
@@ -73,7 +71,7 @@ def play_games(N,agent1,agent2,size=9):
 def test(size=9):
     encoder = SimpleEncoder(size)
     z_net = torch.jit.load('nets\\z_net.pt')
-    z_agent = ZAgent(z_net,size,encoder,root_noise=True)
+    z_agent = ZAgent(z_net,size,encoder,root_noise=False,playouts=2)
 
 
     play_games(50,z_agent,RandomAgent(),size)
@@ -87,9 +85,7 @@ def play_training_game(agent1,agent2,size=9):
             move = agent1.select_move(gamestate)
         elif gamestate.turn == -1:
             move = agent2.select_move(gamestate)
-
         gamestate.move(move)
-        
     return gamestate
 
 def train_loop(net,dataloader,value_loss_fn,policy_loss_fn,optimizer):
@@ -123,7 +119,7 @@ def fit_stuff(size=9):
     value_loss_fn = nn.MSELoss()
     policy_loss_fn = nn.CrossEntropyLoss()
     batch_size = 32
-    learning_rate = 1e-4
+    learning_rate = 1e-3
     optimizer = torch.optim.SGD(z_net.parameters(), lr=learning_rate,momentum=0.9)
 
 
@@ -157,10 +153,27 @@ def fit_stuff(size=9):
     model_scripted = torch.jit.script(z_net) # Export to TorchScript
     model_scripted.save('nets\\z_net.pt')
 
+
+'''
+siz = 9
+z_net = torch.jit.load('nets\\z_net.pt')
+board = Board(siz)
+gamestate = GameState(1,board)
+encoder = SimpleEncoder(size=siz)
+z_agent = ZAgent(z_net,siz,encoder,playouts=150)
+
+start_time = time.time()
+z_agent.select_move(gamestate)
+play_games(500,z_agent,RandomAgent())
+print(time.time()-start_time)
+'''
+
+
+
 '''
 encoder = SimpleEncoder(9)
 znet = torch.jit.load('nets\\z_net.pt')
-zagent = ZAgent(znet,9,encoder,root_noise=True)
-zagent.set_playouts(500)
-play_training_game(zagent,zagent)
+zagent = ZAgent(znet,9,encoder,root_noise=False)
+zagent.set_playouts(150)
+play_training_game(zagent,RandomAgent())
 '''

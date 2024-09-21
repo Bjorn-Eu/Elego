@@ -9,27 +9,27 @@ from branch import Branch
 from random_agent import RandomAgent
 from encoder import Encoder
 import copy
-from z_experiencecollector import ZExperienceCollector
-from z_experiencecollector import ZExperienceData
+from zexperiencecollector import ZExperienceCollector
+from zexperiencecollector import ZExperienceData
 
 
 class ZNet(nn.Module):
     def __init__(self,size):
         super().__init__()
-        self.size = 64*size*size
-        self.conv1 = nn.Conv2d(2,64,3,padding='same')
-        self.conv2 = nn.Conv2d(64,64,3,padding='same')
-        self.conv3 = nn.Conv2d(64,64,3,padding='same')
-        self.linear1 = nn.Linear(self.size,512)
+        self.size = 16*size*size
+        self.conv1 = nn.Conv2d(2,16,3,padding='same')
+        self.conv2 = nn.Conv2d(16,16,3,padding='same')
+        self.conv3 = nn.Conv2d(16,16,3,padding='same')
+        self.linear1 = nn.Linear(self.size,32)
   
         #value head
-        self.value_linear = nn.Linear(512,512)
-        self.value_output = nn.Linear(512,size*size)
+        self.value_linear = nn.Linear(32,32)
+        self.value_output = nn.Linear(32,size*size)
         self.soft_max = nn.Softmax(dim=1)
 
         #policy head
-        self.policy_linear = nn.Linear(512,512)
-        self.policy_output = nn.Linear(512,1)
+        self.policy_linear = nn.Linear(32,32)
+        self.policy_output = nn.Linear(32,1)
 
         
 
@@ -61,19 +61,21 @@ class ZNet(nn.Module):
 
 class ZAgent(Agent):
 
-    def __init__(self,net,size,encoder,root_noise=True,playouts=20):
+    def __init__(self,net,size,encoder,root_noise=True,playouts=150,device='cpu'):
         self.net = net
         self.size = size
         self.encoder = encoder
         self.collector = None
         self.root_noise = root_noise
         self.playouts = playouts
+        self.device = device
 
     def set_playouts(self,playouts):
-        self.playout = playouts
+        self.playouts = playouts
         
     def set_collector(self,collector):
         self.collector = collector
+        
     def select_move(self,gamestate):
         root = self.create_node(gamestate,noise=self.root_noise)
         for i in range(self.playouts):
@@ -117,14 +119,14 @@ class ZAgent(Agent):
         board_np = self.encoder.encode_board(gamestate).astype('float32')
         board_np.shape = (1,2,self.size,self.size)
         board_tensor = torch.from_numpy(board_np)
-
+        board_tensor = board_tensor.to(self.device)
         self.net.eval()
 
         with torch.no_grad():
             value, priors = self.net(board_tensor)
 
         value = value.item()
-        priors = priors.numpy()
+        priors = priors.cpu().numpy()
         priors.shape = (self.size*self.size,)
         if noise:
             rnd = np.random.default_rng()
@@ -225,4 +227,5 @@ class Node():
             parent.total_value -= value
             parent.update_wins2(-value)
             
+
 
