@@ -1,11 +1,12 @@
 from board import Board
 from move import Move
-import collections
+import copy
+
 class GameState:
     def __init__(self,turn,board):
         self.turn = turn
         self.board = board
-        self.move_history = collections.deque([])
+        self.move_history = []
         self.was_capture = False
         self.winner = 0
     
@@ -64,8 +65,7 @@ class GameState:
             self.switch_turn()
             self.was_capture = False
 
-    def evaluation():
-        return Board.EMPTY
+    
 
     def evaluate(self):
         if self.was_capture == True:
@@ -80,10 +80,10 @@ def turn_to_string(turn):
             return "White"
         else:
             return "Game ended"
-
-
     
 
-    
+def __deepcopy__(self,memo={}):
+    new_board = copy.deepcopy(self.board)
+    return gamestate(self.turn,new_board)
 
         

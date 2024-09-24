@@ -32,17 +32,16 @@ def test_connected():
     board.move(Move(1,3,2))
     board.move(Move(1,3,4))
     
-    assert(len(board.adjacent_friends(1,1,1)) == 1)
-    assert(len(board.adjacent_friends(1,3,1)) == 3)
+   
     board.print_board()
-    group1 = board.connected_friends(1,(3, 1),[(3, 1)])
-    group2 = board.connected_friends(1,(3, 5),[(3, 5)])
-    assert(len(group1) == 6)
-    assert(len(group2) == 6)
+
+    group = board.grid[(3,2)]
+    assert(len(group.stones) == 6)
     board.move(Move(1,3,3))
     board.print_board()
-    group = board.connected_friends(1,(3, 1),[(3, 1)])
-    assert(len(group) == 13)
+    
+    group = board.grid[(3,2)]
+    assert(len(group.stones) == 13)
 
 def test_connected2():
     board = Board(9)
@@ -50,24 +49,13 @@ def test_connected2():
         for j in range(1,4):
             board.move(Move(1,i,j))
 
-    group = board.connected_friends(1,(1,1),[(1, 1)])
+    group = board.grid[(3,2)]
     board.print_board()
-    print(group)
-    assert(len(group) == 27)
-    liberties = board.liberties(1,1)
-    lib2 = board.total_liberties(group)
-    assert(liberties == 0)
-    assert(lib2 == 9)
+    assert(len(group.stones) == 27)
+    liberties = group.number_of_liberties()
+    assert(liberties == 9)
 
-    board.move(Move(0,5,3))
-    group = board.connected_friends(1,(1,1),[(1, 1)])
-    board.print_board()
-    print(group)
-    assert(len(group) == 26)
-    liberties = board.liberties(1,1)
-    lib2 = board.total_liberties(group)
-    assert(liberties == 0)
-    assert(lib2 == 9)
+    
 
 def test_connected3():
     board = Board(5)
@@ -76,22 +64,28 @@ def test_connected3():
         board.move(Move(-1,1,i))
         board.move(Move(-1,i,5))
         board.move(Move(-1,5,i))
-    group = board.connected_friends(-1,(1,3),[(1,3)])
-    assert(len(group) == 16)
-    assert(board.total_liberties(group) == 8)
+
+    board.print_board()
+    group = board.grid[(2,1)]
+    assert(len(group.stones) == 16)
+    assert(group.number_of_liberties()== 8)
 
 
 def test_connected4():
     board = Board(5)
     for i in range(2,5):
         board.move(Move(-1,i,2))
-        board.move(Move(-1,2,i))
+        
         board.move(Move(-1,i,4))
-        board.move(Move(-1,4,i))
-    group = board.connected_friends(-1,(2,3),[(2,3)])
-    assert(len(group) == 8)
+        
+    board.move(Move(-1,2,3))
+    board.move(Move(-1,4,3))
+    board.print_board()
+    group = board.grid[(3,2)]
+
+    assert(len(group.stones) == 8)
     print(group)
-    assert(board.total_liberties(group) == 13)
+    assert(group.number_of_liberties() == 13)
     
     
     
@@ -174,15 +168,15 @@ def test_board2():
     board.move(Move(1,4,1))
     board.move(Move(1,5,1))
     board.print_board()
-    groupw = board.connected_friends(-1,(2, 1),[(2, 1)])
-    assert(not board.has_zero_liberties(groupw))
-    assert(len(groupw)==5)
-    assert(board.total_liberties(groupw) == 7)
+    group = board.grid[(3,2)]
+    #assert(not board.has_zero_liberties(groupw))
+    assert(len(group.stones)==5)
+    assert(group.number_of_liberties() == 7)
 
-    groupb = board.connected_friends(1,(5, 1),[(5, 1)])
-    assert(not board.has_zero_liberties(groupb))
-    assert(len(groupb)==2)
-    assert(board.total_liberties(groupb) == 1)
+    group = board.grid[(4,1)]
+    #assert(not board.has_zero_liberties(groupb))
+    assert(len(group.stones)==2)
+    assert(group.number_of_liberties() == 1)
 
 
     move = Move(-1,3,1)
@@ -190,17 +184,9 @@ def test_board2():
     move = Move(1,3,1)
 
 
-    for g in board.groups:
-        print("Stones",g.stones)
-        print("Liberties",g.liberties)
     assert(board.is_self_capture(move))
-    #assert(not board.is_legal_move(move))
+    assert(not board.is_legal_move(move))
 
-    board.move(move)
-    groupb = board.connected_friends(1,(5, 1),[(5, 1)])
-    assert(len(groupb) == 3)
-    assert(board.total_liberties(groupb) == 0)
-    assert(board.has_zero_liberties(groupb))    
   
 def test_bigcapture():
     board = Board(9)

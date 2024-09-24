@@ -17,7 +17,7 @@ class ZNet(nn.Module):
     def __init__(self,size):
         super().__init__()
         self.size = 16*size*size
-        self.conv1 = nn.Conv2d(2,16,3,padding='same')
+        self.conv1 = nn.Conv2d(5,16,3,padding='same')
         self.conv2 = nn.Conv2d(16,16,3,padding='same')
         self.conv3 = nn.Conv2d(16,16,3,padding='same')
         self.linear1 = nn.Linear(self.size,32)
@@ -75,7 +75,7 @@ class ZAgent(Agent):
         
     def set_collector(self,collector):
         self.collector = collector
-        
+
     def select_move(self,gamestate):
         root = self.create_node(gamestate,noise=self.root_noise)
         for i in range(self.playouts):
@@ -102,14 +102,15 @@ class ZAgent(Agent):
                 node.update_wins(-child.value)
 
         mv = max(root.moves(),key=root.visit_count)
-        movie = self.id_to_move(gamestate.turn,mv)
+        
+        move = self.id_to_move(gamestate.turn,mv)
         if not (self.collector is None):
             visit_count = np.array([root.visit_count(i) for i in range(self.size*self.size)]).astype('float32')
-            visit_count = visit_count/(root.visits-1) #requires at least 2 visists adds to approx 1.. 
+            visit_count = visit_count/(root.visits-1) #requires at least 2 visits adds to approx 1.. 
             np_board = self.encoder.encode_board(gamestate).astype('float32')
             self.collector.record_data(np_board,visit_count)
+        return move
         
-        return movie
 
     def select_branch(self,node):
         return max(node.moves(), key=node.score_branch)
@@ -117,7 +118,7 @@ class ZAgent(Agent):
 
     def create_node(self,gamestate,move=None,parent=None,noise = False):
         board_np = self.encoder.encode_board(gamestate).astype('float32')
-        board_np.shape = (1,2,self.size,self.size)
+        board_np.shape = (1,5,self.size,self.size)
         board_tensor = torch.from_numpy(board_np)
         board_tensor = board_tensor.to(self.device)
         self.net.eval()
@@ -133,7 +134,6 @@ class ZAgent(Agent):
             ar = [0.03*20 for i in range(self.size*self.size)]
             s = rnd.dirichlet(ar)
             priors = 0.75*priors + 0.25*s
-            
 
         new_node = Node(gamestate,parent,move,priors,value)
 
@@ -153,22 +153,19 @@ class Node():
         self.last_move = last_move
         self.visits = 1
         self.value = value
-        self.total_value = value
         self.size = gamestate.board.size
         self.is_terminal = gamestate.is_over()
 
         self.branches = {}
 
-        legal_moves = gamestate.legal_moves()
-
         for mv_index, prior in enumerate(priors):
+            
             mv_x = (mv_index % self.size)+1
             mv_y = int(mv_index/self.size)+1
             move = Move(gamestate.turn,mv_x,mv_y)
             if(gamestate.is_legal_move(move)):
                 self.branches[mv_index] = Branch(prior)
 
-        
         self.children = {}
 
     def moves(self):
@@ -177,7 +174,6 @@ class Node():
     def add_child(self,move,child):
         self.children[move] = child
         self.branches[move].total_value -= child.value
-        self.total_value -= child.value
         self.visits += 1
 
     def has_child(self,move):
@@ -192,7 +188,7 @@ class Node():
     def expected_value(self,move):
         branch = self.branches[move]
         if branch.visits == 0:
-            return 0
+            return 0.0
         else:
             return branch.total_value/branch.visits
 
@@ -203,7 +199,7 @@ class Node():
             return 0
             
     def score_branch(self,move):
-        c=2
+        c=4.0
         q = self.expected_value(move)
         p = self.prior(move)
         n = self.visit_count(move)
@@ -215,17 +211,7 @@ class Node():
             parent.visits = parent.visits + 1
             (parent.branches[self.last_move]).visits += 1
             (parent.branches[self.last_move]).total_value -= value
-            parent.total_value -= value
-            parent.update_wins2(-value)
+            parent.update_wins(-value)
 
-    def update_wins2(self,value):
-        if not self.parent is None:
-            parent = self.parent
-            parent.visits = parent.visits + 1
-            (parent.branches[self.last_move]).visits += 1
-            (parent.branches[self.last_move]).total_value -= value
-            parent.total_value -= value
-            parent.update_wins2(-value)
-            
 
 

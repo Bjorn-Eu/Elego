@@ -2,69 +2,73 @@ from move import Move
 import random
 import numpy as np
 from group import Group
+import copy
+
 
 class Board:
     EMPTY = 0
     BLACK = 1
     WHITE = -1
     BORDER = 3
-    def __init__(self,size):
+    def __init__(self,size,adjacency_table = None):
         self.size=size
-        self.arraysize = size+2
-        #make a board of dimension size*size with a one space border around it
-        #self.board = np.zeros((self.arraysize, self.arraysize),dtype=np.int32) seems this is just slower in general
-        self.board = [[self.EMPTY for col in range(self.arraysize)] for row in range(self.arraysize)]
+        self.occupied = set()
+        self.grid = {}
+        self.adjacency_table = adjacency_table
+        if self.adjacency_table is None:
+            self.adjacency_table = create_adjacency_table(self.size)
 
-        #set all border squares
-        self.board[0] = [self.BORDER for col in range(self.arraysize)]
-        self.board[size+1] = self.board[0]
-        for i in range(size+1):
-            self.board[i][0] = self.BORDER
-            self.board[i][size+1] = self.BORDER
-        self.groups = []
 
 
     def move(self,move):
-        self.board[move.x][move.y] = move.turn
-        new_group = self.create_stone(move)
-        liberties = self.liberties(move.x,move.y)
-        if liberties != 4:
-            for group in self.groups:
-                group.liberties.discard((move.x, move.y))
-        adjacents = self.adjacent_friends(move.turn,move.x,move.y)
-        for adjacent in adjacents:
-            for group in self.groups:       
-                if adjacent in group.stones and (adjacent not in new_group.stones):
-                    new_group.merge_group(group)
-                    self.groups.remove(group)
+        point = (move.x, move.y)
+        self.occupied.add(point)
         
-        self.groups.append(new_group)
+        new_group = self.create_stone(move)
+        adjacent_groups = self.adjacent_groups(point)
+        for group in adjacent_groups: 
+            for stone in group.stones:
+                self.grid[stone] = self.grid[stone].remove_liberty(point)
+    
 
+        adjacent_groups = self.adjacent_groups(point)
+        new_group = self.create_stone(move)
+        for group in adjacent_groups:
+            if group.color == move.turn:
+                new_group = new_group.merge_group(group)
+
+        for stone in new_group.stones:
+            self.grid[stone] = new_group
+        
 
     def create_stone(self,move):
-        group = Group(move.turn)
-        group.add_stone((move.x, move.y))
         adjacent_lib = self.adjacent_liberties(move)
-        group.add_liberties(adjacent_lib)
+        group = Group(move.turn,[(move.x, move.y)],adjacent_lib)
         return group
 
     def adjacent_liberties(self,move):
-        index_x = move.x
-        index_y = move.y
-        liberties = set()
-        if self.board[index_x+1][index_y] == self.EMPTY:
-            liberties.add((index_x+1,index_y))
-        if self.board[index_x-1][index_y] == self.EMPTY:
-            liberties.add((index_x-1,index_y))
-        if self.board[index_x][index_y+1] == self.EMPTY:
-            liberties.add((index_x,index_y+1))
-        if self.board[index_x][index_y-1] == self.EMPTY:
-            liberties.add((index_x,index_y-1))
-        return liberties
+        return self.adjacency_table[(move.x,move.y)]-self.occupied
 
+    def adjacent_groups(self,point):
+        adjacent_groups = set()
+        adjacent_stones = self.adjacent_stones(point)
+        for stone in adjacent_stones:
+                adjacent_groups.add(self.grid[stone])
+        return adjacent_groups
+    
+    def adjacent_stones(self,point):
+        return self.adjacency_table[point] & self.occupied
+
+    def adjacent_groups_index(self,point):
+        adjacent_group_index = []
+        for i in range(len(self.groups)):
+            if point in self.groups[i].liberties:
+                if not i in adjacent_group_index:   
+                    adjacent_group_index.append(i)
+        return adjacent_group_index
 
     def is_legal_move(self,move):
-        if self.board[move.x][move.y] != 0:
+        if (move.x, move.y) in self.occupied:
             return False
         elif self.is_capture(move):
             return True
@@ -72,49 +76,43 @@ class Board:
             return False
         else:
             return True
-
-    #returns the number of adjacent empty spaces
-    def liberties(self,index_x,index_y):
-        liberties = 0
-        if self.board[index_x+1][index_y] == self.EMPTY:
-            liberties += 1
-        if self.board[index_x-1][index_y] == self.EMPTY:
-            liberties += 1
-        if self.board[index_x][index_y+1] == self.EMPTY:
-            liberties += 1
-        if self.board[index_x][index_y-1] == self.EMPTY:
-            liberties +=1
-        return liberties
     
     #assuming move isn't a capture it checks if it is a self capture
     def is_self_capture(self,move):
-        if self.liberties(move.x,move.y) > 0:
+        group = self.create_stone(move)
+        
+        if group.number_of_liberties() > 0:
             return False
         else:
-            group = self.create_stone(move)
-            adjacents = self.adjacent_friends(move.turn,move.x,move.y)
-            for adjacent in adjacents:
-                for group in self.groups:
-                    if adjacent in group.stones:
-                        if group.number_of_liberties() >= 2:
-                            return False
+            adjacent_groups = self.adjacent_groups((move.x, move.y))
+            for group in adjacent_groups:
+                if group.color == move.turn:
+                    if group.number_of_liberties() >= 2:
+                        return False
         return True
 
     
     def is_capture(self,move):
         ENEMY = -move.turn
-        enemies = self.adjacent_friends(ENEMY,move.x,move.y)
-        
-        for enemy in enemies:
-            for group in self.groups:
-                if (enemy in group.stones) and group.number_of_liberties()==1:
+        adjacent_groups = self.adjacent_groups((move.x, move.y))
+        for group in adjacent_groups:
+            if group.color == ENEMY:
+                if group.number_of_liberties() == 1:
                     return True
         return False
 
     def print_board(self):
+        np_board= np.zeros(((self.size),(self.size)),dtype=np.float32)
         for i in range(1,self.size+1):
             for j in range(1,self.size+1):
-                color = self.board[j][i]
+                point= (i,j)
+                if point in self.occupied:
+                    np_board[i-1][j-1] = self.grid[(point)].color
+        
+
+        for i in range(0,self.size):
+            for j in range(0,self.size):
+                color = np_board[j][i]
                 if color == self.EMPTY:
                     print(".",end=" ")
                 elif color == self.BLACK:
@@ -122,60 +120,44 @@ class Board:
                 else:
                     print("W",end=" ")    
             print("")
+        
 
-    #counts the total liberties of a group of stones
-    def total_liberties(self,group):
-        temp = []
-        liberties = 0
-        for x in group:
-            adjacent = self.adjacent_friends(0,x[0],x[1])
-            for i in adjacent:
-                if not i in temp:
-                    temp.append(i)
-                    liberties += 1
-        return liberties
-
-    def connected_friends(self,turn,coord,friends):
-        temp_friends = self.adjacent_friends(turn,coord[0],coord[1])
-        for x in temp_friends:
-            if not x in friends:
-                friends.append(x)
-                self.connected_friends(turn,x,friends)
-        return friends
-
-    def adjacent_stones(self,index_x,index_y):
-        friends = []
-        if self.board[index_x+1][index_y] != 0:
-            friends.append((index_x+1,index_y))
-        if self.board[index_x-1][index_y] != 0:
-            friends.append((index_x-1,index_y))
-        if self.board[index_x][index_y+1] != 0:
-            friends.append((index_x,index_y+1))
-        if self.board[index_x][index_y-1] != 0:
-            friends.append((index_x,index_y-1))
-        return friends
-
-    #returns list of all coordinate of adjacent stone of that color
-    def adjacent_friends(self,color,index_x,index_y):
-        friends = []
-        if self.board[index_x+1][index_y] == color:
-            friends.append((index_x+1,index_y))
-        if self.board[index_x-1][index_y] == color:
-            friends.append((index_x-1,index_y))
-        if self.board[index_x][index_y+1] == color:
-            friends.append((index_x,index_y+1))
-        if self.board[index_x][index_y-1] == color:
-            friends.append((index_x,index_y-1))
-        return friends
 
     #returns a list of all legal moves for a given color
     def legal_moves(self,color):
         moves = []
-        for i in range(1,self.size+1):
-            for j in range(1,self.size+1):
-                move = Move(color,i,j)
-                if self.is_legal_move(move):
-                    moves.append(move)
+        candidates = self.adjacency_table.keys() - self.occupied
+        for candidate in candidates:
+            move = Move(color,candidate[0],candidate[1])
+            if self.is_legal_move(move):
+                moves.append(move)
         return moves
 
         
+    def __deepcopy__(self,memo={}):
+        board = Board(self.size,adjacency_table=self.adjacency_table)
+        board.occupied = copy.copy(self.occupied)
+        board.grid = copy.copy(self.grid) #shallow copy
+        return board
+        
+
+def create_adjacency_table(size):
+    adjacency_table = {}
+    
+    #inside points
+    for i in range(2,size):
+        for j in range(2,size):
+            point = (i, j)
+            adjacency_table[point] = {(i-1,j),(i+1,j),(i,j-1),(i,j+1)}
+    #edge points
+    for i in range (2,size):
+        adjacency_table[(1,i)] = {(2,i),(1,i-1),(1,i+1)}
+        adjacency_table[(size,i)] = {(size-1,i),(size,i-1),(size,i+1)}
+        adjacency_table[(i,1)] = {(i,2),(i-1,1),(i+1,1)}
+        adjacency_table[(i,size)] = {(i,size-1),(i-1,size),(i+1,size)}
+    #corner points
+    adjacency_table[(1,1)] = {(1,2),(2,1)}
+    adjacency_table[(1,size)] = {(2,size),(1,size-1)}
+    adjacency_table[(size,size)] = {(size,size-1),(size-1,size)}
+    adjacency_table[(size,1)] = {(size,2),(size-1,1)}
+    return adjacency_table

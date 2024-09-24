@@ -10,10 +10,12 @@ from gamestate import GameState
 from zagent import ZNet
 from zagent import ZAgent
 from random_agent import RandomAgent
-from simpleencoder import SimpleEncoder
 from zexperiencecollector import ZExperienceCollector
 from zexperiencecollector import ZExperienceData
+from simpleencoder import SimpleEncoder
+from extendedencoder import ExtendedEncoder
 import time
+import copy
 
 def play_training_games(N,agent1,agent2,size=9):
     p1_collector = ZExperienceCollector()
@@ -23,7 +25,7 @@ def play_training_games(N,agent1,agent2,size=9):
     agent1_wins = 0
     agent2_wins = 0
     for i in range (N):
-        if i%10 == 0:
+        if i%5 == 0:
             print("playing game", i, "out of",N)
         gamestate = play_training_game(agent1,agent2,size)
         if gamestate.turn == 1:
@@ -40,18 +42,17 @@ def play_training_games(N,agent1,agent2,size=9):
 
     datap1 = p1_collector.to_data()
     datap2 = p2_collector.to_data()
-    datap1.write('selfplaydata\\z_agentb')
-    datap2.write('selfplaydata\\z_agentw')
-
+    datap1.write('selfplaydata\\zagentb')
+    datap2.write('selfplaydata\\zagentw')
 
 
 def self_play(size=9,device='cpu'):
-    encoder = SimpleEncoder(size)
-    z_net = torch.jit.load('nets\\z_net.pt')
+    encoder = ExtendedEncoder(size=size)
+    z_net = torch.jit.load('nets\\znet.pt')
 
     z_agentb = ZAgent(z_net,size,encoder)
     z_agentw = ZAgent(z_net,size,encoder)
-    play_training_games(300,z_agentb,z_agentw,size)
+    play_training_games(500,z_agentb,z_agentw,size)
 
 def play_games(N,agent1,agent2,size=9):
     agent1_wins = 0
@@ -69,12 +70,12 @@ def play_games(N,agent1,agent2,size=9):
 
 
 def test(size=9):
-    encoder = SimpleEncoder(size)
-    z_net = torch.jit.load('nets\\z_net.pt')
+    encoder = ExtendedEncoder(size=size)
+    z_net = torch.jit.load('nets\\znet.pt')
     z_agent = ZAgent(z_net,size,encoder,root_noise=False,playouts=2)
 
 
-    play_games(50,z_agent,RandomAgent(),size)
+    play_games(100,z_agent,RandomAgent(),size)
 
 def play_training_game(agent1,agent2,size=9):
     board = Board(size)
@@ -86,6 +87,7 @@ def play_training_game(agent1,agent2,size=9):
         elif gamestate.turn == -1:
             move = agent2.select_move(gamestate)
         gamestate.move(move)
+        #gamestate.print_state()
     return gamestate
 
 def train_loop(net,dataloader,value_loss_fn,policy_loss_fn,optimizer):
@@ -114,27 +116,27 @@ def train_loop(net,dataloader,value_loss_fn,policy_loss_fn,optimizer):
     print(f"The average policy loss was: {total_policy_loss/num_batches:.4f}")
 
 def fit_stuff(size=9):
-    z_net = torch.jit.load("nets\\z_net.pt")
+    z_net = torch.jit.load("nets\\znet.pt")
 
     value_loss_fn = nn.MSELoss()
     policy_loss_fn = nn.CrossEntropyLoss()
     batch_size = 32
-    learning_rate = 1e-3
+    learning_rate = 1e-4
     optimizer = torch.optim.SGD(z_net.parameters(), lr=learning_rate,momentum=0.9)
 
 
     datap1 = ZExperienceData()
-    datap1.load('selfplaydata\\z_agentb.npz')
+    datap1.load('selfplaydata\\zagentb.npz')
 
     datap2 = ZExperienceData()
-    datap2.load('selfplaydata\\z_agentw.npz')
+    datap2.load('selfplaydata\\zagentw.npz')
 
     game_data = np.append((datap1.gamestates).astype('float32'),(datap2.gamestates).astype('float32'),0) 
     game_counts = np.append(datap1.visit_counts,datap2.visit_counts,0).astype('float32')
     game_rewards = np.append(datap1.rewards,datap2.rewards).astype('float32')
 
     samples = game_data.shape[0]
-    game_data.shape = (samples,2,size,size)
+    game_data.shape = (samples,5,size,size)
     game_counts.shape = (samples,size*size)
     game_rewards.shape = (samples,1)
 
@@ -151,7 +153,8 @@ def fit_stuff(size=9):
     train_loop(z_net,train_dataloader,value_loss_fn,policy_loss_fn,optimizer)
 
     model_scripted = torch.jit.script(z_net) # Export to TorchScript
-    model_scripted.save('nets\\z_net.pt')
+    model_scripted.save('nets\\znet.pt')
+
 
 
 '''
