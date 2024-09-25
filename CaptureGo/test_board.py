@@ -87,9 +87,6 @@ def test_connected4():
     print(group)
     assert(group.number_of_liberties() == 13)
     
-    
-    
-    
 
 def test1():
     board = Board(5)

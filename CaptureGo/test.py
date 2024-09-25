@@ -20,10 +20,10 @@ def test():
     training.play_training_game(random_agent,random_agent)
 
 def test2():
-    znet = torch.jit.load('nets\\z_net.pt')
-    zagent = ZAgent(znet,9,SimpleEncoder())
-    training.play_training_game(zagent,zagent)
-    #training.play_games(10,zagent,zagent)
+    znet = ZNet(size=5)
+    zagent = ZAgent(znet,5,ExtendedEncoder(size=5))
+    #training.play_training_game(zagent,zagent,size=5)
+    training.play_games(1,zagent,zagent,size=5)
 
 '''
 cProfile.run('test2()','profile_results')
@@ -31,18 +31,18 @@ stats = pstats.Stats('profile_results')
 stats.sort_stats('time').print_stats()
 '''
 
+
 '''
 znet = torch.jit.load('nets\\z_net.pt')
 zagent = ZAgent(znet,9,SimpleEncoder())
 training.play_training_game(zagent,zagent)
-'''
 
-
-
-
-'''
-gamestate = training.play_training_game(RandomAgent(),RandomAgent(),size=5)
-print(gamestate.board.adjacent_liberties((Move(1,3,3))))
+znet = torch.jit.load('nets\\znet.pt')
+zagent = ZAgent(znet,5,ExtendedEncoder(size=5),root_noise=False,playouts=1)
+board = Board(5)
+gamestate = GameState(1,board)
+move = zagent.select_move(gamestate)
+move.print()
 '''
 
 
@@ -54,19 +54,10 @@ training.play_games(1000,ragent,ragent)
 print("The time was",time.time()-start_time)
 
 
-
-
-znet = torch.jit.load('nets\\znet.pt')
-zagent = ZAgent(ZNet(5),5,ExtendedEncoder(size=5),root_noise=True,playouts=50)
+znet = torch.jit.load('nets\\znetb6n27.pt')
+zagent = ZAgent(znet,5,ExtendedEncoder(size=5),root_noise=False,playouts=500)
 
 start_time = time.time()
-training.play_games(50,zagent,zagent,size=5)
+training.play_games(100,zagent,RandomAgent(),size=5)
 print("The time was",time.time()-start_time)
-
-
-
-
-
-
-
 
