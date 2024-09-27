@@ -47,11 +47,7 @@ class ZNet(nn.Module):
 
         #Blocks
         self.blocks = nn.ModuleList([Block() for i in range(0,self.n)])
-
         self.batch1 = nn.BatchNorm2d(self.c)
-
-
-
 
         #value head
         self.value_linear = nn.Linear(self.size,self.c_value)
@@ -62,8 +58,6 @@ class ZNet(nn.Module):
         self.policy_batch = nn.BatchNorm1d(self.c_policy)
         self.policy_output = nn.Linear(self.c_policy,size*size)
         self.soft_max = nn.Softmax(dim=1)
-
-        
 
 
     def forward(self,x):
@@ -112,7 +106,7 @@ class ZAgent(Agent):
     def set_collector(self,collector):
         self.collector = collector
 
-    def select_move(self,gamestate):
+    def select_move(self,gamestate,printy=False):
         root = self.create_node(gamestate,noise=self.root_noise)
         for i in range(self.playouts):
             node = root
@@ -127,17 +121,21 @@ class ZAgent(Agent):
                     next_move = self.select_branch(node)
 
             if(node.is_terminal):
-                node.update_wins(-1)
+                node.update_wins(1)
             else:
                 next_move_X = self.id_to_move(node.gamestate.turn,next_move)
                 new_gamestate = copy.deepcopy(node.gamestate)
                 new_gamestate.move(next_move_X)
-                child = self.create_node(new_gamestate,next_move,node)
+                child = self.create_node(new_gamestate,next_move,node,printy=printy)
                 node.add_child(next_move,child)
                 node.branches[next_move].visits += 1
                 node.update_wins(-child.value)
 
         mv = max(root.moves(),key=root.visit_count)
+        if printy:
+            for branch in root.branches:
+                print("Branch index:",branch,"Prior",root.branches[branch].prior)
+                print("Branch visits",root.branches[branch].visits,"Q value:",root.expected_value(branch))
         
         move = self.id_to_move(gamestate.turn,mv)
         if not (self.collector is None):
@@ -145,14 +143,15 @@ class ZAgent(Agent):
             visit_count = visit_count/(root.visits-1) #requires at least 2 visits adds to approx 1.. 
             np_board = self.encoder.encode_board(gamestate).astype('float32')
             self.collector.record_data(np_board,visit_count)
-        return move
+        #return root
         
+        return move
 
     def select_branch(self,node):
         return max(node.moves(), key=node.score_branch)
 
 
-    def create_node(self,gamestate,move=None,parent=None,noise = False):
+    def create_node(self,gamestate,move=None,parent=None,noise = False,printy=False):
         board_np = self.encoder.encode_board(gamestate).astype('float32')
         board_np.shape = (1,5,self.size,self.size)
         board_tensor = torch.from_numpy(board_np)
@@ -164,13 +163,17 @@ class ZAgent(Agent):
 
         value = value.item()
         priors = priors.cpu().numpy()
+        
         priors.shape = (self.size*self.size,)
+        
         if noise:
             rnd = np.random.default_rng()
             ar = [0.03*10 for i in range(self.size*self.size)]
             s = rnd.dirichlet(ar)
-            priors = 0.90*priors + 0.10*s
-
+            priors = 0.75*priors + 0.25*s
+        if printy:
+            print("Value:",value)
+            print(priors.reshape((self.size,self.size)))
         new_node = Node(gamestate,parent,move,priors,value)
 
         return new_node
@@ -245,7 +248,7 @@ class Node():
             parent = self.parent
             parent.visits = parent.visits + 1
             (parent.branches[self.last_move]).visits += 1
-            (parent.branches[self.last_move]).total_value -= value
+            (parent.branches[self.last_move]).total_value += value
             parent.update_wins(-value)
 
 

@@ -5,8 +5,8 @@ import torch
 
 
 def train():
-    start_index = 27
-    for i in range(0,28):
+    start_index = 19
+    for i in range(0,20):
         index = start_index + i
         training.self_play(size=5,fileindex=index)
 

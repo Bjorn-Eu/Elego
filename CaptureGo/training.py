@@ -48,10 +48,10 @@ def play_training_games(N,agent1,agent2,size=9,fileindex=0):
 
 def self_play(size=9,device='cpu',fileindex=0):
     encoder = ExtendedEncoder(size=size)
-    z_net = torch.jit.load(f'nets\\znetb6n{fileindex}.pt')
-
-    z_agentb = ZAgent(z_net,size,encoder,playouts=500)
-    z_agentw = ZAgent(z_net,size,encoder,playouts=500)
+    z_net = torch.jit.load(f'nets\\znet{fileindex}.pt')
+    z_net.to(device)
+    z_agentb = ZAgent(z_net,size,encoder,playouts=100,device=device)
+    z_agentw = ZAgent(z_net,size,encoder,playouts=100,device=device)
     play_training_games(500,z_agentb,z_agentw,size,fileindex=fileindex)
 
 def play_games(N,agent1,agent2,size=9):
@@ -71,10 +71,11 @@ def play_games(N,agent1,agent2,size=9):
 
 def test(size=9,fileindex=0):
     encoder = ExtendedEncoder(size=size)
-    z_net = torch.jit.load(f'nets\\znetb6n{fileindex}.pt')
-    z_agent = ZAgent(z_net,size,encoder,root_noise=False,playouts=10)
+    z_net = torch.jit.load(f'nets\\znet{fileindex}.pt')
+    z_agent = ZAgent(z_net,size,encoder,root_noise=False,playouts=1)
 
     play_games(100,z_agent,RandomAgent(),size)
+    play_games(100,RandomAgent(),z_agent,size)
 
 def play_training_game(agent1,agent2,size=9):
     board = Board(size)
@@ -115,12 +116,12 @@ def train_loop(net,dataloader,value_loss_fn,policy_loss_fn,optimizer):
     print(f"The average policy loss was: {total_policy_loss/num_batches:.4f}")
 
 def fit_stuff(size=9,fileindex=0):
-    z_net = torch.jit.load(f'nets\\znetb6n{fileindex}.pt')
+    z_net = torch.jit.load(f'nets\\znet{fileindex}.pt')
 
     value_loss_fn = nn.MSELoss()
     policy_loss_fn = nn.CrossEntropyLoss()
     batch_size = 32
-    learning_rate = 1e-1
+    learning_rate = 1e-4
     optimizer = torch.optim.SGD(z_net.parameters(), lr=learning_rate,momentum=0.9)
 
 
@@ -150,7 +151,7 @@ def fit_stuff(size=9,fileindex=0):
 
     train_loop(z_net,train_dataloader,value_loss_fn,policy_loss_fn,optimizer)
 
-    model_scripted = torch.jit.script(z_net) # Export to TorchScript
-    model_scripted.save(f'nets\\znetb6n{fileindex+1}.pt')
+    model_scripted = torch.jit.script(z_net) # Export to torchscript
+    model_scripted.save(f'nets\\znet{fileindex+1}.pt')
 
 
