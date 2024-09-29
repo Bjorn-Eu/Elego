@@ -72,6 +72,10 @@ class GameState:
             return -self.turn
         else:
             return 0
+    
+    def __deepcopy__(self,memo={}):
+        new_board = copy.deepcopy(self.board)
+        return GameState(self.turn,new_board)
 
 def turn_to_string(turn):
         if turn == 1:
@@ -82,8 +86,9 @@ def turn_to_string(turn):
             return "Game ended"
     
 
-def __deepcopy__(self,memo={}):
-    new_board = copy.deepcopy(self.board)
-    return gamestate(self.turn,new_board)
+
+
+
+
 
         
