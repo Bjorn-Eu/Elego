@@ -167,3 +167,4 @@ CaptureGo/profile_results
 /CaptureGo/nets
 *.npz
 profile_results
+*.pt
