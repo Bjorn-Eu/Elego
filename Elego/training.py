@@ -7,7 +7,7 @@ import numpy as np
 from board import Board
 from move import Move
 from gamestate import GameState
-from zagent import ZNet
+from network import ZNet
 from zagent import ZAgent
 from random_agent import RandomAgent
 from zexperiencecollector import ZExperienceCollector
@@ -50,8 +50,8 @@ def self_play(size=9,device='cpu',fileindex=0):
     encoder = ExtendedEncoder(size=size)
     z_net = torch.jit.load(f'nets\\znet{fileindex}.pt')
     z_net.to(device)
-    z_agentb = ZAgent(z_net,size,encoder,playouts=600,device=device)
-    z_agentw = ZAgent(z_net,size,encoder,playouts=600,device=device)
+    z_agentb = ZAgent(z_net,size,encoder,playouts=50,device=device)
+    z_agentw = ZAgent(z_net,size,encoder,playouts=50,device=device)
     play_training_games(5000,z_agentb,z_agentw,size,fileindex=fileindex)
 
 def play_games(N,agent1,agent2,size=9):
@@ -71,8 +71,8 @@ def play_games(N,agent1,agent2,size=9):
 
 def test(size=9,fileindex=0):
     encoder = ExtendedEncoder(size=size)
-    z_net = torch.jit.load(f'nets\\znet{fileindex}.pt')
-    z_agent = ZAgent(z_net,size,encoder,root_noise=False,playouts=1)
+    z_net = torch.jit.load(f'nets9x9\\znet{fileindex}.pt')
+    z_agent = ZAgent(z_net,size,encoder,root_noise=False,playouts=10)
 
     play_games(1000,z_agent,RandomAgent(),size)
     play_games(1000,RandomAgent(),z_agent,size)
@@ -139,7 +139,6 @@ def fit_stuff(size=9,fileindex=0):
     game_data.shape = (samples,5,size,size)
     game_counts.shape = (samples,size*size)
     game_rewards.shape = (samples,1)
-
 
     train_boards_tensor = torch.from_numpy(game_data)
     train_counts_tensor = torch.from_numpy(game_counts)
