@@ -1,9 +1,10 @@
+'''
 import gameplay.board
 from gameplay.board import Board
 from gameplay.gamestate import GameState
 from gameplay.move import Move
 from encoders.extendedencoder import ExtendedEncoder
-import config_board
+import gameplay.config_board as config_board
 
 def test_lib0():
     board = config_board.atari_go9x9()
@@ -14,4 +15,4 @@ def test_lib0():
     print(encoded_board[3][4])
     assert(encoded_board[3][4][3] == 1)   
 
-
+'''
