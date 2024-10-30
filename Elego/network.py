@@ -1,3 +1,4 @@
+#4 block value and policy network compatible with the 5 channel ExtendedEncoder
 import torch
 import torch.nn as nn
 
@@ -12,8 +13,8 @@ class Block(nn.Module):
         
         
     def forward(self,input):
-        x=self.batch1(input)
-        x=torch.relu(x)
+        x = self.batch1(input)
+        x = torch.relu(x)
         x = self.conv1(x)
         x = torch.relu(x)
         x = self.conv2(x)
@@ -72,6 +73,6 @@ class ZNet(nn.Module):
         policy = self.policy_batch(policy)
         policy = torch.relu(policy)
         policy = self.policy_output(policy)
-        policy = self.soft_max(policy)
+        #policy = self.soft_max(policy)
 
         return value, policy

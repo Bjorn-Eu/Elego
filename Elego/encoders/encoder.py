@@ -1,5 +1,5 @@
-from board import Board
-from move import Move
+from gameplay.board import Board
+from gameplay.move import Move
 
 class Encoder():
     def encode_board(self,board):
@@ -11,5 +11,5 @@ class Encoder():
     def encode_move(self,move):
         raise NotImplementedError
 
-    def decode_move(self,np_move):
+    def decode_move(self,np_move,turn):
         raise NotImplementedError

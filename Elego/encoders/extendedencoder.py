@@ -1,7 +1,6 @@
-from encoder import Encoder
-from board import Board
-from move import Move
-from gamestate import GameState
+from encoders.encoder import Encoder
+from gameplay.board import Board
+from gameplay.move import Move
 import numpy as np
 
 class ExtendedEncoder(Encoder):
@@ -24,7 +23,7 @@ class ExtendedEncoder(Encoder):
                         np_black[i-1][j-1] = 1
                     else:
                         np_white[i-1][j-1] = 1
-                    liberties = group.liberties
+                    liberties = group.number_of_liberties()
                     if liberties==1:
                         np_one[i-1][j-1] = 1
                     elif liberties ==2:
@@ -38,12 +37,26 @@ class ExtendedEncoder(Encoder):
             board_array = np.array([np_white, np_black, np_one, np_two, np_three])
         return board_array
 
-    def decode_board(self,board):
-        raise NotImplementedError
+    def decode_board(self,np_array):
+        np_black = np_array[0]
+        np_white = np_array[1]
+        size = np_black.shape[0]
+
+        board = Board(9)
+        for i in range(size):
+            for j in range(size):
+                if np_black[i][j] == 1:
+                    board.move(Move(1,i+1,j+1))
+                elif np_white[i][j] == 1:
+                    board.move(Move(-1,i+1,j+1))
+        return board
         
     def encode_move(self,move):
-        raise NotImplementedError
+        np_move = (move.y-1)*self.size+move.x-1
+        return np_move
 
-    def decode_move(self,np_move):
-        raise NotImplementedError
+    def decode_move(self,np_move,turn):
+        mv_x = (np_move % self.size)+1
+        mv_y = int(np_move/self.size)+1
+        return Move(turn,mv_x,mv_y)
 

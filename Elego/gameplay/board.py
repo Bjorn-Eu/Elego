@@ -1,7 +1,7 @@
-from move import Move
+from gameplay.move import Move
 import random
 import numpy as np
-from group import Group
+from gameplay.group import Group
 import copy
 
 

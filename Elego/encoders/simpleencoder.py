@@ -1,7 +1,6 @@
-from encoder import Encoder
-from board import Board
-from move import Move
-from gamestate import GameState
+from encoders.encoder import Encoder
+from gameplay.board import Board
+from gameplay.move import Move
 import numpy as np
 
 class SimpleEncoder(Encoder):
@@ -34,7 +33,7 @@ class SimpleEncoder(Encoder):
     def encode_move(self,move):
         raise NotImplementedError
 
-    def decode_move(self,np_move):
+    def decode_move(self,np_move,turn):
         raise NotImplementedError
 
 

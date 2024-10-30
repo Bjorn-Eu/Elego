@@ -1,7 +1,11 @@
+'''
+Agent that selects an random move with uniform probability
+Used only for debugging and benchmarking purposes
+'''
 from agent import Agent
-from gamestate import GameState
-from board import Board
-from move import Move
+from gameplay.gamestate import GameState
+from gameplay.board import Board
+from gameplay.move import Move
 from random import randint
 
 class RandomAgent(Agent):

@@ -1,5 +1,5 @@
-from board import Board
-from move import Move
+from gameplay.board import Board
+from gameplay.move import Move
 import copy
 
 class GameState:

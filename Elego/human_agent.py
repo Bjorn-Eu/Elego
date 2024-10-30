@@ -1,7 +1,10 @@
+''' Provides a simple interface for humans to play by inputting
+coordinates e.g. C4 to play at the (3,4) point.
+''' 
 from agent import Agent
-from board import Board
-from gamestate import GameState
-from move import Move
+from gameplay.board import Board
+from gameplay.gamestate import GameState
+from gameplay.move import Move
 class HumanAgent(Agent):
 
     def select_move(self,gamestate):

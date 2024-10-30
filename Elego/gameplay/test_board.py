@@ -1,7 +1,6 @@
-import board
-from board import Board
-from move import Move
-import collections
+import gameplay.board
+from gameplay.board import Board
+from gameplay.move import Move
 
 
 
@@ -166,12 +165,10 @@ def test_board2():
     board.move(Move(1,5,1))
     board.print_board()
     group = board.grid[(3,2)]
-    #assert(not board.has_zero_liberties(groupw))
     assert(len(group.stones)==5)
     assert(group.number_of_liberties() == 7)
 
     group = board.grid[(4,1)]
-    #assert(not board.has_zero_liberties(groupb))
     assert(len(group.stones)==2)
     assert(group.number_of_liberties() == 1)
 

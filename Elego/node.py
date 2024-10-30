@@ -1,12 +1,12 @@
 import numpy as np
-from move import Move
+from gameplay.move import Move
 class Node():
-    def __init__(self,gamestate,parent,last_move,priors,value):
+    def __init__(self,gamestate,parent,last_move,priors,value=0):
         self.gamestate = gamestate
         self.parent = parent
         self.last_move = last_move
         self.visits = 1
-        self.value = value
+        #self.value = value
         self.size = gamestate.board.size
         self.is_terminal = gamestate.is_over()
         self.virtual_losses = 0
@@ -60,20 +60,20 @@ class Node():
         return self.children[move]
             
     def score_branch(self):
-        return self.branch_Q() + self.branch_U()
+        return self.branch_Q()+ self.branch_U()
 
     def branch_Q(self):
         return np.divide(self.branch_values, self.branch_visits,
         out=np.zeros_like(self.branch_values), where=self.branch_visits!=0)
 
     def branch_U(self):
-        c=1.4
-        return c*self.branch_priors*np.sqrt(self.visits)/(self.branch_visits+1)
+        c=1.1
+        return c*self.branch_priors*np.sqrt(self.visits-1)/(self.branch_visits+1)
 
     def update_wins(self,value):
+        self.visits += 1
         if not self.parent is None:
             parent = self.parent
-            parent.visits = parent.visits + 1
             parent.branch_visits[self.last_move] += 1
             parent.branch_values[self.last_move] += value
             parent.update_wins(-value)
@@ -81,7 +81,6 @@ class Node():
     def add_virtual_loss(self):
         self.virtual_losses += 1
         self.visits += 1
-        self.value -= 1
         if not self.parent is None:
             self.parent.branch_values[self.last_move] -= 1
             self.parent.branch_visits[self.last_move] += 1
@@ -89,7 +88,7 @@ class Node():
 
     def undo_virtual_losses(self):
         self.visits -= self.virtual_losses
-        self.value += self.virtual_losses
+
         if not self.parent is None:
             self.parent.branch_values[self.last_move] += self.virtual_losses
             self.parent.branch_visits[self.last_move] -= self.virtual_losses
