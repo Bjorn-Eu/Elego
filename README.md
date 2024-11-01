@@ -4,7 +4,6 @@ Elego is constructed similar to other modern go programs, combining MCTS togethe
 
 
 Some of the resources we found useful while working on this program:
-
--The book "Deep learning and the game of go" by Pumperla and Ferguson, which provides an accessible introduction to writing an AI for Go.
+- The book "Deep learning and the game of go" by Pumperla and Ferguson, which provides an accessible introduction to writing an AI for Go.
 - The 'minigo' project, a go AI written in Python. 
 - The 'KataGo' project, the currently strongest available open source go AI.
