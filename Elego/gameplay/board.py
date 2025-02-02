@@ -9,8 +9,8 @@ class Board:
     EMPTY = 0
     BLACK = 1
     WHITE = -1
-    BORDER = 3
-    def __init__(self,size,adjacency_table = None):
+
+    def __init__(self,size,adjacency_table = None,hash_table=None,hash=0):
         self.size=size
         self.occupied = set()
         self.grid = {}
@@ -18,9 +18,13 @@ class Board:
         if self.adjacency_table is None:
             self.adjacency_table = create_adjacency_table(self.size)
 
+            
 
 
+    #applies a move to the board
+    #assumes that the move is legal
     def move(self,move):
+        #self.hash ^= self.hash_table[(move.turn,move.x,move.y)]
         point = (move.x, move.y)
         self.occupied.add(point)
         
@@ -120,7 +124,9 @@ class Board:
                 else:
                     print("W",end=" ")    
             print("")
-        
+
+    def get_board(self):
+        return self.grid
 
 
     #returns a list of all legal moves for a given color
@@ -140,7 +146,7 @@ class Board:
         board.grid = copy.copy(self.grid) #shallow copy
         return board
         
-
+#precomputes adjacent squares
 def create_adjacency_table(size):
     adjacency_table = {}
     

@@ -44,9 +44,9 @@ def self_play(size=9,device='cpu',fileindex=0):
     encoder = ExtendedEncoder(size=size)
     z_net = torch.jit.load(f'nets9x9\\znet{fileindex}.pt')
     z_net.to(device)
-    z_agentb = ZAgent(z_net,size,encoder,root_noise=True,playouts=150,device=device,batch_size=8)
-    z_agentw = ZAgent(z_net,size,encoder,root_noise=True,playouts=150,device=device,batch_size=8)
-    play_training_games(2000,z_agentb,z_agentw,size,fileindex=fileindex)
+    z_agentb = ZAgent(z_net,size,encoder,root_noise=True,playouts=300,device=device,batch_size=8)
+    z_agentw = ZAgent(z_net,size,encoder,root_noise=True,playouts=300,device=device,batch_size=8)
+    play_training_games(3000,z_agentb,z_agentw,size,fileindex=fileindex)
 
 def play_games(N,agent1,agent2,size=9):
     agent1_wins = 0
@@ -78,8 +78,8 @@ def cf_nets(size=9,fileindex1=0,fileindex2=1,games=200):
     encoder = ExtendedEncoder(size=size)
     znet1 = torch.jit.load(f'nets9x9\\znet{fileindex1}.pt')
     znet2 = torch.jit.load(f'nets9x9\\znet{fileindex2}.pt')
-    zagent1 = ZAgent(znet1,size,encoder,root_noise=True,playouts=100,batch_size=8)
-    zagent2 = ZAgent(znet2,size,encoder,root_noise=True,playouts=100,batch_size=8)
+    zagent1 = ZAgent(znet1,size,encoder,root_noise=True,playouts=250,batch_size=8)
+    zagent2 = ZAgent(znet2,size,encoder,root_noise=True,playouts=250,batch_size=8)
     play_games(games,zagent2,zagent1,size)
     play_games(games,zagent1,zagent2,size)
 

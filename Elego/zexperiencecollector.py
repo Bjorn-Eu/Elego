@@ -1,3 +1,6 @@
+'''
+Collects data for supervised training
+'''
 import numpy as np
 class ZExperienceCollector():
     def __init__(self):

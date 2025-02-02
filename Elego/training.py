@@ -21,7 +21,7 @@ def train_loop(net,dataloader,value_loss_fn,policy_loss_fn,optimizer):
     total_policy_loss = 0
     for train_board, train_policy_update, train_adj_reward in dataloader:
         value, policy = net(train_board)
-        loss_value = 0.8*value_loss_fn(value,train_adj_reward)
+        loss_value = 0.5*value_loss_fn(value,train_adj_reward)
         loss_policy = nn.CrossEntropyLoss()(policy,train_policy_update.softmax(dim=1))
         loss =loss_policy+loss_value
 
@@ -47,7 +47,7 @@ def fit_stuff(size=9,fileindex=0):
     value_loss_fn = nn.functional.mse_loss
     policy_loss_fn = nn.functional.binary_cross_entropy
     batch_size = 32 
-    learning_rate = 1e-3
+    learning_rate = 1e-5
     optimizer = torch.optim.SGD(znet.parameters(), lr=learning_rate,momentum=0.0)
 
 
@@ -79,7 +79,7 @@ def fit_stuff(size=9,fileindex=0):
     train_dataset = TensorDataset(train_boards_tensor,train_counts_tensor,train_rewards_tensor)
     train_dataloader = DataLoader(train_dataset,batch_size)
 
-    for i in range(10):
+    for i in range(3):
         print("epoch", i)
         train_loop(znet,train_dataloader,value_loss_fn,policy_loss_fn,optimizer)
 
@@ -93,7 +93,7 @@ def fit_stuff_wtr(size=9,fileindex=0,transformation=None):
     value_loss_fn = nn.functional.mse_loss
     policy_loss_fn = nn.functional.binary_cross_entropy
     batch_size = 32
-    learning_rate = 1e-3
+    learning_rate = 1e-5
     optimizer = torch.optim.SGD(znet.parameters(), lr=learning_rate,momentum=0.0)
 
 
@@ -133,7 +133,7 @@ def fit_stuff_wtr(size=9,fileindex=0,transformation=None):
     train_dataset = TensorDataset(train_boards_tensor,train_counts_tensor,train_rewards_tensor)
     train_dataloader = DataLoader(train_dataset,batch_size,shuffle=True)
 
-    for i in range(10):
+    for i in range(3):
         print("epoch", i)
         train_loop(znet,train_dataloader,value_loss_fn,policy_loss_fn,optimizer)
 

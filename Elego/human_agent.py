@@ -19,3 +19,5 @@ class HumanAgent(Agent):
                 move = Move(gamestate.turn,move_x,move_y)
                 if gamestate.is_legal_move(move):
                     return move
+
+

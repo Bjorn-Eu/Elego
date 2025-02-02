@@ -1,3 +1,6 @@
+'''
+board encoded representing the game state by 5 channels
+'''
 from encoders.encoder import Encoder
 from gameplay.board import Board
 from gameplay.move import Move

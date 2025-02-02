@@ -2,7 +2,7 @@
 implements the main trainloop consisting of:
 i) generate game records by self play
 ii) train the network with data
-iii) evaluate strength
+iii) evaluate strength compared to previous network
 '''
 import training
 import selfplay
@@ -14,7 +14,7 @@ import transform
 
 
 def train():
-    start_index = 21
+    start_index = 38
     transforms = [transform.rot90,transform.rot180,transform.rot270,
     transform.flip,transform.fliprt90,transform.fliprt180,transform.fliprt270]
     for i in range(1):

@@ -50,7 +50,6 @@ class WNET_POL(nn.Module):
                         policy[i][j-1] = val
 
 
-            policy = policy
         policy.shape = (self.size*self.size)
         
         policy = torch.from_numpy(policy)

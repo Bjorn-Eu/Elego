@@ -1,3 +1,6 @@
+'''
+unit test to check the board implementation
+'''
 import gameplay.board
 from gameplay.board import Board
 from gameplay.move import Move

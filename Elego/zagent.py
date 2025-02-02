@@ -35,7 +35,7 @@ class ZAgent(Agent):
             #walk down to leaf node
             self.create_leaves(root,batch_size=self.batch_size)
             if printout and root.visits%200==0:
-                np.set_printoptions(precision=2,suppress=True)
+                np.set_printoptions(precision=3,suppress=True)
                 print("Priors:")
                 print(root.branch_priors.reshape(self.size,self.size))
                 print(root.branch_visits.reshape(self.size,self.size))
@@ -50,7 +50,7 @@ class ZAgent(Agent):
 
         if not (self.collector is None):
             visit_count = root.branch_visits
-            visit_count = visit_count#/(root.visits-1) #requires at least 2 visits adds to approx 1.. 
+            #visit_count = visit_count/(root.visits-1) #requires at least 2 visits adds to approx 1.. 
             np_board = self.encoder.encode_board(gamestate).astype('float32')
             self.collector.record_data(np_board,visit_count)
         return move
