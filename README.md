@@ -13,6 +13,7 @@ python3 -m pip install -U pygame --user
 ![Elego](https://github.com/Bjorn-Eu/Elego/blob/main/Elego.png)
 
 Some of the resources we found useful while working on this program:
+- The original AlphaGoZero paper by DeepMind: https://www.nature.com/articles/nature24270
 - The book "Deep learning and the game of go" by Pumperla and Ferguson, which provides an accessible introduction to writing an AI for Go.
 - The 'minigo' project, a go AI written in Python. 
 - The 'KataGo' project, the currently strongest available open source go AI.
