@@ -8,7 +8,7 @@ You can find a ready to use binary for Windows under releases: https://github.co
 Alternatively it can be used by running the "playgui.py" file which requires that PyTorch and Pygame are both available. 
 Pygame can be installed by running:
 ```
-python3 -m pip install -U pygame --user
+pip install pygame
 ```
 ![Elego](https://github.com/Bjorn-Eu/Elego/blob/main/Elego.png)
 
