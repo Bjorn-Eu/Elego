@@ -5,14 +5,15 @@
 #include <thread>
 #include <atomic>
 #include "network_evaluation.h"
-
+#include "util/write_sgf.h"
 std::atomic<int> bwins;
 std::atomic<int> wwins;
 
 
 int play_mcts_game(MCTS agent){
-    Board board(9);
-    GameState gamestate(1,9,board);
+    int size = 9;
+    Board board(size);
+    GameState gamestate(1,size,board);
     while(true){
         Point move = agent.select_move(gamestate);
         if(gamestate.board.is_capture(Move(gamestate.turn,move.first,move.second))){
@@ -25,6 +26,8 @@ int play_mcts_game(MCTS agent){
             break;
         }
     }
+    write_sgf(gamestate);
+    
     return gamestate.turn;
 }
 

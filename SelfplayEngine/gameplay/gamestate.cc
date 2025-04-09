@@ -1,11 +1,13 @@
 #include "gamestate.h"
 
 void GameState::play_move(Point point){
-    if(board.is_capture(Move(turn,point.first,point.second))){
+    Move move = Move(turn,point.first,point.second);
+    if(board.is_capture(move)){
         is_over = true;
     }
-    board.play_move(Move(turn,point.first,point.second));
+    board.play_move(move);
     turn = (turn == 1) ? 2 : 1;
+    move_history.push_back(move);
 }
 
 void GameState::print_gamestate(){

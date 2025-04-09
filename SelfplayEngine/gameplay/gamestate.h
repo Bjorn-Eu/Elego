@@ -15,6 +15,7 @@ class GameState{
         int turn;
         int size;
         Board board;
+        std::vector<Move> move_history;
         GameState(int t,int s,Board b):turn(t), size(s), board(b){}
         void play_move(Point move);
         void print_gamestate();
